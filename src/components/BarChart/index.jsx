@@ -31,7 +31,7 @@ export const BarChart = ({ divId }) => {
         const y = d3.scaleLinear().range([height, 0]);
 
         const svg = d3
-            .select(`#${divId}`)
+            .select(`#bar-chart`)
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -55,10 +55,12 @@ export const BarChart = ({ divId }) => {
             .data(data)
             .enter()
             .append("rect")
+            .attr("fill", "pink")
             .attr("class", "bar")
             .attr("x", function (d) {
                 return x(d.name);
             })
+            
             .attr("width", x.bandwidth())
             .attr("y", function (d) {
                 return y(d.value);
@@ -78,7 +80,7 @@ export const BarChart = ({ divId }) => {
     return (
         <div>
             <h2>Bar Chart Component</h2>
-            <div id={`${divId}`}>
+            <div id="bar-chart">
                 <div className="bar"></div>
             </div>
         </div>

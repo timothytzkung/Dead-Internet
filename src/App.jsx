@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'motion/react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
@@ -6,6 +7,7 @@ import './App.css'
 
 // Components
 import { BarChart } from './components/BarChart'
+import { AnimatedLineChart } from './components/AnimatedLineChart'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -13,18 +15,26 @@ function App() {
   return (
     <>
       <section id="center">
+        <h1>Sample Components Board</h1>
         <div>
-          <h1>Sample BarChart</h1>
-          <BarChart divId={"bar-chart"}/>
+          
+          <BarChart />
+
+          { /* Motion Wrappers */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8 }}
+          >
+            <AnimatedLineChart />
+          </motion.div>
+
           <p>
-            Edit <code>src/components/BarChart/index.jsx</code> and save to test <code>BarChart</code>
+            You've reached the end! Wow!
           </p>
         </div>
       </section>
-
-      <div className="ticks"></div>
-
-      <div className="ticks"></div>
       <section id="spacer"></section>
     </>
   )
