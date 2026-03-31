@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import * as d3 from "d3";
 
-export const BarChart = ({ divId }) => {
+export const BarChart = () => {
     const [data, setData] = useState([
         {
             name: "A",

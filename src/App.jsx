@@ -8,6 +8,7 @@ import './App.css'
 // Components
 import { BarChart } from './components/BarChart'
 import { AnimatedLineChart } from './components/AnimatedLineChart'
+import { ScatterPlot } from './components/ScatterPlot'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -17,7 +18,7 @@ function App() {
       <section id="center">
         <h1>Sample Components Board</h1>
         <div>
-          
+          <ScatterPlot />
           <BarChart />
 
           { /* Motion Wrappers */}
