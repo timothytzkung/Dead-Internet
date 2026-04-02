@@ -7,11 +7,11 @@
 
 /* VARIABLES */
 :root {
-  --bg: #1a1a1b;
-  --panel: #222223;
+  --bg: #1A120F;
+  --panel: #1A120F;
   --text: #d7dadc;
   --muted: #818384;
-  --accent: #ff6a3d; /* faded reddit orange */
+  --accent: #D97757; /* faded reddit orange */
   --border: #343536;
 }
 

@@ -1,106 +1,121 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
+export const ScatterPlot = ({
+  width = 860,
+  height = 400,
+  xKey = "avg_word_length",
+  yKey = "user_karma",
+  xLabel = "Average Word Length",
+  yLabel = "User Karma",
+  csvPath = "/data/reddit_dead_internet_analysis.csv"
+}) => {
+  const containerRef = useRef(null);
 
-export const ScatterPlot = ({_width=860, _height=400}) => {
-    const containerRef = useRef(null);
+  useEffect(() => {
+    const margin = { top: 10, right: 30, bottom: 50, left: 70 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
 
-    useEffect(() => {
-        const margin = { top: 10, right: 30, bottom: 30, left: 60 };
-        const width = _width - margin.left - margin.right;
-        const height = _height - margin.top - margin.bottom;
+    d3.select(containerRef.current).selectAll("*").remove();
 
-        // clear previous chart
-        d3.select(containerRef.current).selectAll("*").remove();
+    const svg = d3
+      .select(containerRef.current)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
 
-        const svg = d3.select(containerRef.current)
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    const chart = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        d3.csv("/data/reddit_dead_internet_analysis.csv", d => ({
-            ...d,
-            avg_word_length: +d.avg_word_length,
-            user_karma: +d.user_karma
-        }))
-            .then(data => {
-                // optional: remove invalid rows
-                const cleanData = data.filter(
-                    d => !isNaN(d.avg_word_length) && !isNaN(d.user_karma)
-                );
+    d3.csv(csvPath, d3.autoType)
+      .then(data => {
+        const cleanData = data.filter(
+          d => typeof d[xKey] === "number" &&
+               typeof d[yKey] === "number" &&
+               !Number.isNaN(d[xKey]) &&
+               !Number.isNaN(d[yKey])
+        );
 
-                // start collapsed for animation
-                const x = d3.scaleLinear()
-                    .domain([0, 0])
-                    .range([0, width]);
+        const xExtent = d3.extent(cleanData, d => d[xKey]);
+        const yExtent = d3.extent(cleanData, d => d[yKey]);
 
-                const y = d3.scaleLinear()
-                    .domain([0, 0])
-                    .range([height, 0]);
+        const x = d3.scaleLinear()
+          .domain([0, 0])
+          .range([0, innerWidth]);
 
-                // colour stuff
-                var color = d3.scaleOrdinal()
-                    .domain(["true", "false"])
-                    .range(["#00BA38", "#619CFF"])
+        const y = d3.scaleLinear()
+          .domain([0, 0])
+          .range([innerHeight, 0]);
 
-                // Axis Labels
-                svg.append("g")
-                    .attr("class", "myXaxis")
-                    .attr("transform", `translate(0, ${height})`)
-                    .call(d3.axisBottom(x))
-                    .attr("opacity", 0);
+        const color = d3.scaleOrdinal()
+          .domain(["true", "false"])
+          .range(["#00BA38", "#619CFF"]);
 
-                svg.append("g")
-                    .attr("class", "myYaxis")
-                    .call(d3.axisLeft(y))
-                    .attr("opacity", 0);
+        chart.append("g")
+          .attr("class", "myXaxis")
+          .attr("transform", `translate(0, ${innerHeight})`)
+          .attr("opacity", 0)
+          .call(d3.axisBottom(x));
 
-                // Circles
-                svg.append("g")
-                    .selectAll("circle")
-                    .data(cleanData)
-                    .enter()
-                    .append("circle")
-                    .attr("cx", d => x(d.avg_word_length))
-                    .attr("cy", d => y(d.user_karma))
-                    .attr("r", 1.5)
-                    .style("fill", (d) => color(d.is_bot_flag));
+        chart.append("g")
+          .attr("class", "myYaxis")
+          .attr("opacity", 0)
+          .call(d3.axisLeft(y));
 
-                // animate x axis in
-                x.domain([0, 8]);
+        chart.append("text")
+          .attr("x", innerWidth / 2)
+          .attr("y", innerHeight + 40)
+          .attr("text-anchor", "middle")
+          .text(xLabel);
 
-                svg.select(".myXaxis")
-                    .transition()
-                    .duration(2000)
-                    .attr("opacity", 1)
-                    .call(d3.axisBottom(x));
-                
-                // animate y axis in
-                y.domain([0, 50000]);
+        chart.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", -innerHeight / 2)
+          .attr("y", -45)
+          .attr("text-anchor", "middle")
+          .text(yLabel);
 
-                svg.select(".myYaxis")
-                    .transition()
-                    .duration(2000)
-                    .attr("opacity", 1)
-                    .call(d3.axisLeft(y));
+        chart.append("g")
+          .selectAll("circle")
+          .data(cleanData)
+          .enter()
+          .append("circle")
+          .attr("cx", d => x(d[xKey]))
+          .attr("cy", d => y(d[yKey]))
+          .attr("r", 2)
+          .style("fill", d => color(String(d.is_bot_flag)));
 
-                // animate circles to their final positions
-                svg.selectAll("circle")
-                    .transition()
-                    .delay((d, i) => i * 3)
-                    .duration(2000)
-                    .attr("cx", d => x(d.avg_word_length))
-                    .attr("cy", d => y(d.user_karma));
-            })
-            .catch(err => console.error(err));
-    }, []);
+        x.domain(xExtent).nice();
+        y.domain(yExtent).nice();
 
-    return (
-        <div>
-            <h2>ScatterPlot Component</h2>
-            <div ref={containerRef}></div>
-        </div>
-    );
+        chart.select(".myXaxis")
+          .transition()
+          .duration(2000)
+          .attr("opacity", 1)
+          .call(d3.axisBottom(x));
+
+        chart.select(".myYaxis")
+          .transition()
+          .duration(2000)
+          .attr("opacity", 1)
+          .call(d3.axisLeft(y));
+
+        chart.selectAll("circle")
+          .transition()
+          .delay((d, i) => i * 3)
+          .duration(2000)
+          .attr("cx", d => x(d[xKey]))
+          .attr("cy", d => y(d[yKey]));
+      })
+      .catch(err => console.error(err));
+  }, [width, height, xKey, yKey, xLabel, yLabel, csvPath]);
+
+  return (
+    <div>
+      <h2>ScatterPlot Component</h2>
+      <div ref={containerRef} />
+    </div>
+  );
 };

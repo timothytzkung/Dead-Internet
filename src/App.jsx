@@ -1,44 +1,103 @@
-import { useState } from 'react'
-import { motion } from 'motion/react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useRef, useState } from "react";
+import { LandingSlide } from "./slides/LandingSlide";
+import { DemoSlide } from "./slides/DemoSlide";
+import { Navbar } from "./components/Navbar";
 
-// Components
-import { BarChart } from './components/BarChart'
-import { AnimatedLineChart } from './components/AnimatedLineChart'
-import { ScatterPlot } from './components/ScatterPlot'
+const sections = [
+  {
+    id: "intro",
+    num: "00",
+    label: "Introduction",
+    component: LandingSlide,
+  },
+  {
+    id: "dataset",
+    num: "01",
+    label: "Dataset Overview",
+    component: DemoSlide,
+  },
+  // {
+  //   id: "network",
+  //   num: "06",
+  //   label: "Network Graph",
+  //   component: GraphSlide,
+  // },
+];
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [activeId, setActiveId] = useState("intro");
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) setActiveId(e.target.id);
+        });
+      },
+      { root: container, threshold: 0.5 }
+    );
+
+    const sectionEls = container.querySelectorAll(".section");
+    sectionEls.forEach((s) => observer.observe(s));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <>
-      <section id="center">
-        <h1>Sample Components Board</h1>
-        <div>
-          <ScatterPlot />
-          <BarChart />
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        background: "#1A120F",
+        fontFamily: "'Courier New', monospace",
+      }}
+    >
+      
+      <Navbar sections={sections} activeId={activeId}/>
 
-          { /* Motion Wrappers */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.8 }}
-          >
-            <AnimatedLineChart />
-          </motion.div>
+      {/* Scrollable content */}
+      <div
+        ref={contentRef}
+        style={{
+          marginLeft: 300,
+          flex: 1,
+          overflowY: "scroll",
+          scrollSnapType: "y mandatory",
+          height: "100vh",
+        }}
+      >
+        {sections.map((s) => {
+          const SlideComponent = s.component;
 
-          <p>
-            You've reached the end! Wow!
-          </p>
-        </div>
-      </section>
-      <section id="spacer"></section>
-    </>
-  )
+          return (
+            <div
+              key={s.id}
+              id={s.id}
+              className="section"
+              style={{
+                height: "100vh",
+                scrollSnapAlign: "start",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <div style={{ width: "100%", height: "100%" }}>
+                <SlideComponent />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
-
-export default App
